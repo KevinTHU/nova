@@ -6,7 +6,7 @@
 
 Name:             openstack-nova
 Version:          2014.2.2
-Release:          1%{?dist}
+Release:          2%{?dist}
 Summary:          OpenStack Compute (nova)
 
 Group:            Applications/System
@@ -21,6 +21,38 @@ Source1:          nova-dist.conf
 Source2:          nova.conf.sample
 Source6:          nova.logrotate
 
+%if 0%{?rhel} && 0%{?rhel} <= 6
+Source10:         openstack-nova-api.init
+Source100:        openstack-nova-api.upstart
+Source11:         openstack-nova-cert.init
+Source110:        openstack-nova-cert.upstart
+Source12:         openstack-nova-compute.init
+Source120:        openstack-nova-compute.upstart
+Source13:         openstack-nova-network.init
+Source130:        openstack-nova-network.upstart
+Source14:         openstack-nova-objectstore.init
+Source140:        openstack-nova-objectstore.upstart
+Source15:         openstack-nova-scheduler.init
+Source150:        openstack-nova-scheduler.upstart
+Source16:         openstack-nova-conductor.init
+Source160:        openstack-nova-conductor.upstart
+Source18:         openstack-nova-xvpvncproxy.init
+Source180:        openstack-nova-xvpvncproxy.upstart
+Source19:         openstack-nova-console.init
+Source190:        openstack-nova-console.upstart
+Source24:         openstack-nova-consoleauth.init
+Source240:        openstack-nova-consoleauth.upstart
+Source25:         openstack-nova-metadata-api.init
+Source250:        openstack-nova-metadata-api.upstart
+Source26:         openstack-nova-cells.init
+Source260:        openstack-nova-cells.upstart
+Source27:         openstack-nova-spicehtml5proxy.init
+Source270:        openstack-nova-spicehtml5proxy.upstart
+Source28:         openstack-nova-novncproxy.init
+Source280:        openstack-nova-novncproxy.upstart
+Source29:         openstack-nova-serialproxy.init
+Source290:        openstack-nova-serialproxy.upstart
+%else
 Source10:         openstack-nova-api.service
 Source11:         openstack-nova-cert.service
 Source12:         openstack-nova-compute.service
@@ -36,11 +68,12 @@ Source27:         openstack-nova-cells.service
 Source28:         openstack-nova-spicehtml5proxy.service
 Source29:         openstack-nova-novncproxy.service
 Source31:         openstack-nova-serialproxy.service
+%endif
 
 Source21:         nova-polkit.pkla
 Source23:         nova-polkit.rules
 Source22:         nova-ifc-template
-Source24:         nova-sudoers
+Source32:         nova-sudoers
 Source30:         openstack-nova-novncproxy.sysconfig
 
 BuildArch:        noarch
@@ -88,11 +121,16 @@ Requires:         python-oslo-i18n
 Requires:         python-posix_ipc
 Requires:         python-rfc3986
 
+%if 0%{?rhel} && 0%{?rhel} <= 6
+Requires(postun): initscripts
+Requires(preun):  chkconfig
+%else
 Requires(post):   systemd
 Requires(preun):  systemd
 Requires(postun): systemd
-Requires(pre):    shadow-utils
 BuildRequires:    systemd
+%endif
+Requires(pre):    shadow-utils
 
 %description common
 OpenStack Compute (codename Nova) is open source software designed to
@@ -117,9 +155,19 @@ Requires:         curl
 Requires:         iscsi-initiator-utils
 Requires:         iptables iptables-ipv6
 Requires:         ipmitool
+%if 0%{?rhel} && 0%{?rhel} <= 6
+# import dec failed otherwise
+Requires:         python-webob1.0
+# tunctl is needed where `ip tuntap` is not available
+Requires:         tunctl
+%endif
 Requires:         python-libguestfs
 Requires:         libvirt-python
+%if 0%{?rhel} && 0%{?rhel} <= 6
+Requires:         libvirt >= 0.9.6
+%else
 Requires:         libvirt-daemon-kvm
+%endif
 %if 0%{?rhel}==0
 Requires:         libvirt-daemon-lxc
 Requires:         libvirt-daemon-uml
@@ -154,6 +202,10 @@ Requires:         radvd
 Requires:         bridge-utils
 Requires:         dnsmasq
 Requires:         dnsmasq-utils
+%if 0%{?rhel} && 0%{?rhel} <= 6
+# tunctl is needed where `ip tuntap` is not available
+Requires:         tunctl
+%endif
 Requires:         ebtables
 
 %description network
@@ -545,6 +597,23 @@ package = %{release}
 EOF
 
 # Install initscripts for Nova services
+%if 0%{?rhel} && 0%{?rhel} <= 6
+install -p -D -m 755 %{SOURCE10} %{buildroot}%{_initrddir}/openstack-nova-api
+install -p -D -m 755 %{SOURCE11} %{buildroot}%{_initrddir}/openstack-nova-cert
+install -p -D -m 755 %{SOURCE12} %{buildroot}%{_initrddir}/openstack-nova-compute
+install -p -D -m 755 %{SOURCE13} %{buildroot}%{_initrddir}/openstack-nova-network
+install -p -D -m 755 %{SOURCE14} %{buildroot}%{_initrddir}/openstack-nova-objectstore
+install -p -D -m 755 %{SOURCE15} %{buildroot}%{_initrddir}/openstack-nova-scheduler
+install -p -D -m 755 %{SOURCE16} %{buildroot}%{_initrddir}/openstack-nova-conductor
+install -p -D -m 755 %{SOURCE18} %{buildroot}%{_initrddir}/openstack-nova-xvpvncproxy
+install -p -D -m 755 %{SOURCE19} %{buildroot}%{_initrddir}/openstack-nova-console
+install -p -D -m 755 %{SOURCE24} %{buildroot}%{_initrddir}/openstack-nova-consoleauth
+install -p -D -m 755 %{SOURCE25} %{buildroot}%{_initrddir}/openstack-nova-metadata-api
+install -p -D -m 755 %{SOURCE26} %{buildroot}%{_initrddir}/openstack-nova-cells
+install -p -D -m 755 %{SOURCE27} %{buildroot}%{_initrddir}/openstack-nova-spicehtml5proxy
+install -p -D -m 755 %{SOURCE28} %{buildroot}%{_initrddir}/openstack-nova-novncproxy
+install -p -D -m 755 %{SOURCE29} %{buildroot}%{_initrddir}/openstack-nova-serialproxy
+%else
 install -p -D -m 755 %{SOURCE10} %{buildroot}%{_unitdir}/openstack-nova-api.service
 install -p -D -m 755 %{SOURCE11} %{buildroot}%{_unitdir}/openstack-nova-cert.service
 install -p -D -m 755 %{SOURCE12} %{buildroot}%{_unitdir}/openstack-nova-compute.service
@@ -560,6 +629,7 @@ install -p -D -m 755 %{SOURCE27} %{buildroot}%{_unitdir}/openstack-nova-cells.se
 install -p -D -m 755 %{SOURCE28} %{buildroot}%{_unitdir}/openstack-nova-spicehtml5proxy.service
 install -p -D -m 755 %{SOURCE29} %{buildroot}%{_unitdir}/openstack-nova-novncproxy.service
 install -p -D -m 755 %{SOURCE31} %{buildroot}%{_unitdir}/openstack-nova-serialproxy.service
+%endif
 
 # Install sudoers
 install -p -D -m 440 %{SOURCE24} %{buildroot}%{_sysconfdir}/sudoers.d/nova
@@ -573,6 +643,25 @@ install -d -m 755 %{buildroot}%{_localstatedir}/run/nova
 # Install template files
 install -p -D -m 644 nova/cloudpipe/client.ovpn.template %{buildroot}%{_datarootdir}/nova/client.ovpn.template
 install -p -D -m 644 %{SOURCE22} %{buildroot}%{_datarootdir}/nova/interfaces.template
+
+%if 0%{?rhel} && 0%{?rhel} <= 6
+# Install upstart jobs examples
+install -p -m 644 %{SOURCE100} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE110} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE120} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE130} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE140} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE150} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE160} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE180} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE190} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE240} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE250} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE260} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE270} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE280} %{buildroot}%{_datadir}/nova/
+install -p -m 644 %{SOURCE290} %{buildroot}%{_datadir}/nova/
+%endif
 
 # Install rootwrap files in /usr/share/nova/rootwrap
 mkdir -p %{buildroot}%{_datarootdir}/nova/rootwrap/
@@ -608,79 +697,370 @@ usermod -a -G qemu nova
 exit 0
 
 %post compute
+%if 0%{?rhel} && 0%{?rhel} <= 6
+/sbin/chkconfig --add %{name}-compute
+%else
 %systemd_post %{name}-compute.service
+%endif
+
 %post network
+%if 0%{?rhel} && 0%{?rhel} <= 6
+/sbin/chkconfig --add %{name}-network
+%else
 %systemd_post %{name}-network.service
+%endif
+
 %post scheduler
+%if 0%{?rhel} && 0%{?rhel} <= 6
+/sbin/chkconfig --add %{name}-scheduler
+%else
 %systemd_post %{name}-scheduler.service
+%endif
+
 %post cert
+%if 0%{?rhel} && 0%{?rhel} <= 6
+/sbin/chkconfig --add %{name}-cert
+%else
 %systemd_post %{name}-cert.service
+%endif
+
 %post api
+%if 0%{?rhel} && 0%{?rhel} <= 6
+for svc in api metadata-api; do
+    /sbin/chkconfig --add %{name}-$svc
+done
+%else
 %systemd_post %{name}-api.service %{name}-metadata-api.service
+%endif
+
 %post conductor
+%if 0%{?rhel} && 0%{?rhel} <= 6
+/sbin/chkconfig --add %{name}-conductor
+%else
 %systemd_post %{name}-conductor.service
+%endif
+
 %post objectstore
+%if 0%{?rhel} && 0%{?rhel} <= 6
+/sbin/chkconfig --add %{name}-objectstore
+%else
 %systemd_post %{name}-objectstore.service
+%endif
+
 %post console
+%if 0%{?rhel} && 0%{?rhel} <= 6
+for svc in console consoleauth xvpvncproxy spicehtml5proxy; do
+    /sbin/chkconfig --add %{name}-$svc
+done
+%else
 %systemd_post %{name}-console.service %{name}-consoleauth.service %{name}-xvpvncproxy.service
+%endif
+
 %post cells
+%if 0%{?rhel} && 0%{?rhel} <= 6
+/sbin/chkconfig --add %{name}-cells
+%else
 %systemd_post %{name}-cells.service
+%endif
+
 %post novncproxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+/sbin/chkconfig --add %{name}-novncproxy
+%else
 %systemd_post %{name}-novncproxy.service
+%endif
+
 %post spicehtml5proxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+/sbin/chkconfig --add %{name}-spicehtml5proxy
+%else
 %systemd_post %{name}-spicehtml5proxy.service
+%endif
+
 %post serialproxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+/sbin/chkconfig --add %{name}-serialproxy
+%else
 %systemd_post %{name}-serialproxy.service
+%endif
 
 %preun compute
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -eq 0 ] ; then
+    for svc in compute; do
+        /sbin/service %{name}-${svc} stop >/dev/null 2>&1
+        /sbin/chkconfig --del %{name}-${svc}
+    done
+fi
+%else
 %systemd_preun %{name}-compute.service
+%endif
+
 %preun network
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -eq 0 ] ; then
+    for svc in network; do
+        /sbin/service %{name}-${svc} stop >/dev/null 2>&1
+        /sbin/chkconfig --del %{name}-${svc}
+    done
+fi
+%else
 %systemd_preun %{name}-network.service
+%endif
+
 %preun scheduler
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -eq 0 ] ; then
+    for svc in scheduler; do
+        /sbin/service %{name}-${svc} stop >/dev/null 2>&1
+        /sbin/chkconfig --del %{name}-${svc}
+    done
+fi
+%else
 %systemd_preun %{name}-scheduler.service
+%endif
+
 %preun cert
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -eq 0 ] ; then
+    for svc in cert; do
+        /sbin/service %{name}-${svc} stop >/dev/null 2>&1
+        /sbin/chkconfig --del %{name}-${svc}
+    done
+fi
+%else
 %systemd_preun %{name}-cert.service
+%endif
+
 %preun api
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -eq 0 ] ; then
+    for svc in api metadata-api; do
+        /sbin/service %{name}-${svc} stop >/dev/null 2>&1
+        /sbin/chkconfig --del %{name}-${svc}
+    done
+fi
+%else
 %systemd_preun %{name}-api.service %{name}-metadata-api.service
+%endif
+
 %preun objectstore
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -eq 0 ] ; then
+    for svc in objectstore; do
+        /sbin/service %{name}-${svc} stop >/dev/null 2>&1
+        /sbin/chkconfig --del %{name}-${svc}
+    done
+fi
+%else
 %systemd_preun %{name}-objectstore.service
+%endif
+
 %preun conductor
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -eq 0 ] ; then
+    for svc in conductor; do
+        /sbin/service %{name}-${svc} stop >/dev/null 2>&1
+        /sbin/chkconfig --del %{name}-${svc}
+    done
+fi
+%else
 %systemd_preun %{name}-conductor.service
+%endif
+
 %preun console
 %systemd_preun %{name}-console.service %{name}-consoleauth.service %{name}-xvpvncproxy.service
 %preun cells
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -eq 0 ] ; then
+    for svc in cells; do
+        /sbin/service %{name}-${svc} stop >/dev/null 2>&1
+        /sbin/chkconfig --del %{name}-${svc}
+    done
+fi
+%else
 %systemd_preun %{name}-cells.service
+%endif
+
 %preun novncproxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -eq 0 ] ; then
+    for svc in novncproxy; do
+        /sbin/service %{name}-${svc} stop >/dev/null 2>&1
+        /sbin/chkconfig --del %{name}-${svc}
+    done
+fi
+%else
 %systemd_preun %{name}-novncproxy.service
+%endif
+
 %preun spicehtml5proxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -eq 0 ] ; then
+    for svc in spicehtml5proxy; do
+        /sbin/service %{name}-${svc} stop >/dev/null 2>&1
+        /sbin/chkconfig --del %{name}-${svc}
+    done
+fi
+%else
 %systemd_preun %{name}-spicehtml5proxy.service
+%endif
+
 %preun serialproxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -eq 0 ] ; then
+    for svc in serialproxy; do
+        /sbin/service %{name}-${svc} stop >/dev/null 2>&1
+        /sbin/chkconfig --del %{name}-${svc}
+    done
+fi
+%else
 %systemd_preun %{name}-serialproxy.service
+%endif
 
 %postun compute
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in compute; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-compute.service
+%endif
+
 %postun network
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in network; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-network.service
+%endif
+
 %postun scheduler
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in scheduler; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-scheduler.service
+%endif
+
 %postun cert
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in cert; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-cert.service
+%endif
+
 %postun api
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in api metadata-api; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-api.service %{name}-metadata-api.service
+%endif
+
 %postun objectstore
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in objectstore; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-objectstore.service
+%endif
+
 %postun conductor
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in conductor; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-conductor.service
+%endif
+
 %postun console
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in console consoleauth xvpvncproxy spicehtml5proxy; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-console.service %{name}-consoleauth.service %{name}-xvpvncproxy.service
+%endif
+
 %postun cells
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in cells; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-cells.service
+%endif
+
 %postun novncproxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in novncproxy; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-novncproxy.service
+%endif
+
 %postun spicehtml5proxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in spicehtml5proxy; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-spicehtml5proxy.service
+%endif
+
 %postun serialproxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+if [ $1 -ge 1 ] ; then
+    # package upgrade, not uninstall
+    for svc in serialproxy; do
+        /sbin/service %{name}-${svc} condrestart > /dev/null 2>&1 || :
+    done
+fi
+%else
 %systemd_postun_with_restart %{name}-serialproxy.service
+%endif
 
 %files
 %doc LICENSE
@@ -706,6 +1086,7 @@ exit 0
 %{_bindir}/nova-manage
 %{_bindir}/nova-rootwrap
 
+%exclude %{_datarootdir}/nova/*.upstart
 %{_datarootdir}/nova
 %{_mandir}/man1/nova*.1.gz
 
@@ -722,22 +1103,42 @@ exit 0
 %{_bindir}/nova-baremetal-deploy-helper
 %{_bindir}/nova-baremetal-manage
 %{_bindir}/nova-idmapshift
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-compute
+%{_datarootdir}/nova/openstack-nova-compute.upstart
+%else
 %{_unitdir}/openstack-nova-compute.service
+%endif
 %{_datarootdir}/nova/rootwrap/compute.filters
 
 %files network
 %{_bindir}/nova-network
 %{_bindir}/nova-dhcpbridge
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-network
+%{_datarootdir}/nova/openstack-nova-network.upstart
+%else
 %{_unitdir}/openstack-nova-network.service
+%endif
 %{_datarootdir}/nova/rootwrap/network.filters
 
 %files scheduler
 %{_bindir}/nova-scheduler
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-scheduler
+%{_datarootdir}/nova/openstack-nova-scheduler.upstart
+%else
 %{_unitdir}/openstack-nova-scheduler.service
+%endif
 
 %files cert
 %{_bindir}/nova-cert
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-cert
+%{_datarootdir}/nova/openstack-nova-cert.upstart
+%else
 %{_unitdir}/openstack-nova-cert.service
+%endif
 %defattr(-, nova, nova, -)
 %dir %{_sharedstatedir}/nova/CA/
 %dir %{_sharedstatedir}/nova/CA/certs
@@ -757,39 +1158,86 @@ exit 0
 
 %files api
 %{_bindir}/nova-api*
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-*api
+%{_datarootdir}/nova/openstack-nova-*api.upstart
+%else
 %{_unitdir}/openstack-nova-*api.service
+%endif
 %{_datarootdir}/nova/rootwrap/api-metadata.filters
 
 %files conductor
 %{_bindir}/nova-conductor
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-conductor
+%{_datarootdir}/nova/openstack-nova-conductor.upstart
+%else
 %{_unitdir}/openstack-nova-conductor.service
+%endif
 
 %files objectstore
 %{_bindir}/nova-objectstore
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-objectstore
+%{_datarootdir}/nova/openstack-nova-objectstore.upstart
+%else
 %{_unitdir}/openstack-nova-objectstore.service
+%endif
 
 %files console
 %{_bindir}/nova-console*
 %{_bindir}/nova-xvpvncproxy
+%{_bindir}/nova-spicehtml5proxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-console*
+%{_datarootdir}/nova/openstack-nova-console*.upstart
+%{_initrddir}/openstack-nova-xvpvncproxy
+%{_datarootdir}/nova/openstack-nova-xvpvncproxy.upstart
+%{_initrddir}/openstack-nova-spicehtml5proxy*
+%{_datarootdir}/nova/openstack-nova-spicehtml5proxy.upstart
+%else
 %{_unitdir}/openstack-nova-console*.service
 %{_unitdir}/openstack-nova-xvpvncproxy.service
+%{_unitdir}/openstack-nova-spicehtml5proxy.service
+%endif
 
 %files cells
 %{_bindir}/nova-cells
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-cells
+%{_datarootdir}/nova/openstack-nova-cells.upstart
+%else
 %{_unitdir}/openstack-nova-cells.service
+%endif
 
 %files novncproxy
 %{_bindir}/nova-novncproxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-novncproxy
+%{_datarootdir}/nova/openstack-nova-novncproxy.upstart
+%else
 %{_unitdir}/openstack-nova-novncproxy.service
+%endif
+
 %config(noreplace) %{_sysconfdir}/sysconfig/openstack-nova-novncproxy
 
 %files spicehtml5proxy
 %{_bindir}/nova-spicehtml5proxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-spicehtml5proxy
+%{_datarootdir}/nova/openstack-nova-spicehtml5proxy.upstart
+%else
 %{_unitdir}/openstack-nova-spicehtml5proxy.service
+%endif
 
 %files serialproxy
 %{_bindir}/nova-serialproxy
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{_initrddir}/openstack-nova-serialproxy
+%{_datarootdir}/nova/openstack-nova-serialproxy.upstart
+%else
 %{_unitdir}/openstack-nova-serialproxy.service
+%endif
 
 %files -n python-nova
 %defattr(-,root,root,-)
@@ -803,6 +1251,10 @@ exit 0
 %endif
 
 %changelog
+* Mon Mar 09 2015 Thomas Oulevey <thomas.oulevey@cern.ch> 2014.2.2-2
+- Adapt spec file for juno el6
+- Add *init and *upstart
+
 * Wed Feb 11 2015 Alan Pevec <alan.pevec@redhat.com> 2014.2.2-1
 - Update to upstream 2014.2.2
 
