@@ -78,7 +78,11 @@ Source30:         openstack-nova-novncproxy.sysconfig
 
 BuildArch:        noarch
 BuildRequires:    intltool
+%if 0%{?rhel} && 0%{?rhel} <= 6
+BuildRequires:    python-sphinx10
+%else
 BuildRequires:    python-sphinx
+%endif
 BuildRequires:    python-oslo-sphinx
 BuildRequires:    python-setuptools
 BuildRequires:    python-netaddr
@@ -548,7 +552,11 @@ export PYTHONPATH="$( pwd ):$PYTHONPATH"
 pushd doc
 
 %if 0%{?with_doc}
+%if 0%{?rhel} && 0%{?rhel} <= 6
+SPHINX_DEBUG=1 sphinx-1.0-build -b html source build/html
+%else
 SPHINX_DEBUG=1 sphinx-build -b html source build/html
+%endif
 # Fix hidden-file-or-dir warnings
 rm -fr build/html/.doctrees build/html/.buildinfo
 %endif
@@ -556,7 +564,11 @@ rm -fr build/html/.doctrees build/html/.buildinfo
 # Create dir link to avoid a sphinx-build exception
 mkdir -p build/man/.doctrees/
 ln -s .  build/man/.doctrees/man
+%if 0%{?rhel} && 0%{?rhel} <= 6
+SPHINX_DEBUG=1 sphinx-1.0-build -b man -c source source/man build/man
+%else
 SPHINX_DEBUG=1 sphinx-build -b man -c source source/man build/man
+%endif
 mkdir -p %{buildroot}%{_mandir}/man1
 install -p -D -m 644 build/man/*.1 %{buildroot}%{_mandir}/man1/
 
