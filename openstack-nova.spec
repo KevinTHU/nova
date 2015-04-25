@@ -644,7 +644,7 @@ install -p -D -m 755 %{SOURCE31} %{buildroot}%{_unitdir}/openstack-nova-serialpr
 %endif
 
 # Install sudoers
-install -p -D -m 440 %{SOURCE24} %{buildroot}%{_sysconfdir}/sudoers.d/nova
+install -p -D -m 440 %{SOURCE32} %{buildroot}%{_sysconfdir}/sudoers.d/nova
 
 # Install logrotate
 install -p -D -m 644 %{SOURCE6} %{buildroot}%{_sysconfdir}/logrotate.d/openstack-nova
