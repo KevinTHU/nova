@@ -5,8 +5,8 @@
 %global milestone rc2
 
 Name:             openstack-nova
-Version:          2014.2.2
-Release:          2%{?dist}
+Version:          2014.2.3
+Release:          1%{?dist}
 Summary:          OpenStack Compute (nova)
 
 Group:            Applications/System
@@ -1263,6 +1263,9 @@ fi
 %endif
 
 %changelog
+* Sun Apr 26 2015 Alan Pevec <alan.pevec@redhat.com> 2014.2.3-1
+- Update to upstream 2014.2.3
+
 * Mon Mar 09 2015 Thomas Oulevey <thomas.oulevey@cern.ch> 2014.2.2-2
 - Adapt spec file for juno el6
 - Add *init and *upstart
